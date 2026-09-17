@@ -28,7 +28,7 @@ export type AppColors = {
 };
 
 const shared = {
-  background: '#FFFFFF',
+  background: '#F8F6FD',
   surface: '#FFFFFF',
   foreground: '#1A1A1A',
   card: '#FFFFFF',
@@ -54,8 +54,8 @@ export const themes: Record<ThemeKey, AppColors> = {
     accentLight: '#FCE7F4',
     support: '#1B6B7B',
     supportLight: '#E7F6F8',
-    nav: '#28066A',
-    navText: '#FFFFFF',
+    nav: '#FFFFFF',
+    navText: '#8B8B95',
     onPrimary: '#FFFFFF',
   },
   blue: {
@@ -68,8 +68,8 @@ export const themes: Record<ThemeKey, AppColors> = {
     accentLight: '#FFF8E1',
     support: '#005F8A',
     supportLight: '#E8F5FB',
-    nav: '#1565C0',
-    navText: '#FFFFFF',
+    nav: '#FFFFFF',
+    navText: '#8B8B95',
     onPrimary: '#FFFFFF',
   },
   teal: {
@@ -82,8 +82,8 @@ export const themes: Record<ThemeKey, AppColors> = {
     accentLight: '#FBE9E7',
     support: '#1F5F8B',
     supportLight: '#E3EEF6',
-    nav: '#00695C',
-    navText: '#FFFFFF',
+    nav: '#FFFFFF',
+    navText: '#8B8B95',
     onPrimary: '#FFFFFF',
   },
   contrast: {

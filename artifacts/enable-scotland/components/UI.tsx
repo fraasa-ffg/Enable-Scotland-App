@@ -14,14 +14,12 @@ export function Screen({ children, scroll = true }: PropsWithChildren<{ scroll?:
 export function Header({ title, eyebrow }: { title: string; eyebrow?: string }) {
   const { colors } = useApp();
   return (
-    <View style={styles.header}>
-      <View style={[styles.logoMark, { backgroundColor: colors.primary }]}>
-        <Feather name="navigation" size={17} color={colors.onPrimary} />
+    <View style={[styles.header, { backgroundColor: colors.primaryDark }]}>
+      <View style={[styles.logoMark, { backgroundColor: colors.surface }]}>
+        <Text style={[styles.logoText, { color: colors.primary }]}>enable</Text>
       </View>
-      <View style={styles.headerText}>
-        {eyebrow ? <Text style={[styles.eyebrow, { color: colors.accent }]}>{eyebrow}</Text> : null}
-        <Text style={[styles.title, { color: colors.primaryDark }]}>{title}</Text>
-      </View>
+      <Text style={[styles.brandName, { color: colors.onPrimary }]}>Scotland</Text>
+      {title !== 'Home' ? <Text accessibilityRole="header" style={[styles.headerTitle, { color: colors.onPrimary }]}>{title}</Text> : null}
     </View>
   );
 }
@@ -95,13 +93,13 @@ export function ProgressBar({ current, total }: { current: number; total: number
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { padding: 18, gap: 18 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingBottom: 4 },
-  logoMark: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  headerText: { flex: 1, gap: 1 },
-  eyebrow: { fontSize: 13, fontWeight: '700', letterSpacing: 0.6 },
-  title: { fontSize: 28, lineHeight: 33, fontWeight: '700' },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, paddingTop: 13, paddingBottom: 14, marginHorizontal: -18, marginTop: -18 },
+  logoMark: { width: 53, height: 31, borderRadius: 4, alignItems: 'center', justifyContent: 'center' },
+  logoText: { fontSize: 11, lineHeight: 13, fontWeight: '800' },
+  brandName: { fontSize: 15, lineHeight: 20, fontWeight: '700' },
+  headerTitle: { marginLeft: 'auto', fontSize: 16, lineHeight: 20, fontWeight: '700' },
   sectionTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
-  sectionTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700' },
+  sectionTitle: { fontSize: 13, lineHeight: 18, fontWeight: '800', letterSpacing: 0.7, textTransform: 'uppercase' },
   link: { fontSize: 15, fontWeight: '700' },
   body: { fontSize: 16, lineHeight: 24 },
   cardTitle: { fontSize: 18, lineHeight: 24, fontWeight: '700' },
