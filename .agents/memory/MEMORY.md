@@ -1,2 +1,3 @@
 - [Expo font fallback](expo-font-fallback.md) — keep the scaffold font when a requested Google font package is unavailable in the workspace registry.
 - [Expo workspace modules](expo-workspace-modules.md) — install native Expo packages from the target workspace, not the monorepo root.
+- [Expo audio peer dependency](expo-audio-peer-dependency.md) — native builds need expo-asset installed directly when using expo-audio.

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Alert, StyleSheet, Text } from 'react-native';
 import { useApp } from '@/context/AppContext';
 import { Button, Header, Screen, TextField, uiStyles } from '@/components/UI';
+import { showPermissionFallback } from '@/utils/permissions';
 
 export default function AddContactScreen() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function AddContactScreen() {
     try {
       const permission = await requestPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Contacts permission needed', "We can't access your contacts. You can still type the contact's details below.", [{ text: 'OK' }]);
+        showPermissionFallback(permission, 'Contacts permission needed', "We can't access your contacts. You can still type the contact's details below.");
         return;
       }
       const selected = await Contact.presentPicker();

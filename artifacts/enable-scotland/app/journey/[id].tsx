@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { StepMediaPreviews, NoteEditor, VoiceRecorderButton } from '@/components/StepMedia';
 import { useApp, JourneyStep, Media, MediaType } from '@/context/AppContext';
 import { Button, Header, ProgressBar, Screen, uiStyles } from '@/components/UI';
+import { showPermissionFallback } from '@/utils/permissions';
 
 export default function JourneyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,15 +18,19 @@ export default function JourneyDetailScreen() {
   const currentIndex = journey.steps.findIndex((step) => !step.isDone);
 
   const addVisual = async (step: JourneyStep) => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Photos permission needed', "We can't access your photos and videos. You can still add a voice note or written note instead.", [{ text: 'OK' }]);
-      return;
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showPermissionFallback(permission, 'Photos permission needed', "We can't access your photos and videos. You can still add a voice note or written note instead.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All, quality: 0.8 });
+      const asset = result.canceled ? undefined : result.assets[0];
+      if (!asset?.uri) return;
+      await addMedia(journey.id, step.id, { type: asset.type === 'video' ? 'video' : 'photo', uri: asset.uri });
+    } catch {
+      Alert.alert('Photos unavailable', 'We could not open your photo and video library. You can still add a voice note or written note instead.', [{ text: 'OK' }]);
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All, quality: 0.8 });
-    const asset = result.canceled ? undefined : result.assets[0];
-    if (!asset?.uri) return;
-    await addMedia(journey.id, step.id, { type: asset.type === 'video' ? 'video' : 'photo', uri: asset.uri });
   };
   const addVoice = async (step: JourneyStep, media: Media) => {
     await addMedia(journey.id, step.id, media);

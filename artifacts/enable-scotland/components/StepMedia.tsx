@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { Alert, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppColors } from '@/constants/colors';
 import { Media, MediaType } from '@/context/AppContext';
+import { showPermissionFallback } from '@/utils/permissions';
 
 type MediaProps = {
   colors: AppColors;
@@ -103,7 +104,7 @@ export function VoiceRecorderButton({ colors, onRecorded }: { colors: AppColors;
       }
       const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Microphone permission needed', "We can't access your microphone. You can still add a written note instead.", [{ text: 'OK' }]);
+        showPermissionFallback(permission, 'Microphone permission needed', "We can't access your microphone. You can still add a written note instead.");
         return;
       }
       await recorder.prepareToRecordAsync();

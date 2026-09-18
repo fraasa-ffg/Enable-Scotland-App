@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { useApp, JourneyStep, Media, MediaType } from '@/context/AppContext';
 import { Button, Header, Screen, TextField, uiStyles } from '@/components/UI';
 import { NoteEditor, StepMediaPreviews, VoiceRecorderButton } from '@/components/StepMedia';
+import { showPermissionFallback } from '@/utils/permissions';
 
 const makeId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 type DraftStep = JourneyStep & { media: Media[] };
@@ -21,26 +22,34 @@ export default function CreateJourneyScreen() {
   const [saving, setSaving] = useState(false);
 
   const choosePhoto = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Photos permission needed', "We can't access your photos. You can still save this journey without a journey photo.", [{ text: 'OK' }]);
-      return;
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showPermissionFallback(permission, 'Photos permission needed', "We can't access your photos. You can still save this journey without a journey photo.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+      if (!result.canceled && result.assets[0]?.uri) setImageUri(result.assets[0].uri);
+    } catch {
+      Alert.alert('Photos unavailable', 'We could not open your photo library. You can still save this journey without a journey photo.', [{ text: 'OK' }]);
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
-    if (!result.canceled && result.assets[0]?.uri) setImageUri(result.assets[0].uri);
   };
 
   const chooseStepVisual = async (stepId: string) => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Photos permission needed', "We can't access your photos and videos. You can still add a voice note or written note instead.", [{ text: 'OK' }]);
-      return;
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        showPermissionFallback(permission, 'Photos permission needed', "We can't access your photos and videos. You can still add a voice note or written note instead.");
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All, quality: 0.8 });
+      const asset = result.canceled ? undefined : result.assets[0];
+      if (!asset?.uri) return;
+      const type: MediaType = asset.type === 'video' ? 'video' : 'photo';
+      updateStepMedia(stepId, { type, uri: asset.uri });
+    } catch {
+      Alert.alert('Photos unavailable', 'We could not open your photo and video library. You can still add a voice note or written note instead.', [{ text: 'OK' }]);
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.All, quality: 0.8 });
-    const asset = result.canceled ? undefined : result.assets[0];
-    if (!asset?.uri) return;
-    const type: MediaType = asset.type === 'video' ? 'video' : 'photo';
-    updateStepMedia(stepId, { type, uri: asset.uri });
   };
 
   const updateStep = (id: string, value: string) => setSteps((current) => current.map((step) => step.id === id ? { ...step, title: value } : step));
