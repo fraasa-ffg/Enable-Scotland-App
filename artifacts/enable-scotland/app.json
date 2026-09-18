@@ -14,7 +14,14 @@
     "web": {
       "favicon": "./assets/images/icon.png"
     },
-    "plugins": ["expo-router", "expo-image-picker", "expo-location"],
+    "plugins": [
+      "expo-router",
+      "expo-image-picker",
+      "expo-location",
+      ["expo-audio", { "microphonePermission": "Allow Enable Scotland to record voice notes for your journey steps." }],
+      ["expo-contacts", { "contactsPermission": "Allow Enable Scotland to access your contacts so you can choose an emergency contact." }],
+      "expo-video"
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

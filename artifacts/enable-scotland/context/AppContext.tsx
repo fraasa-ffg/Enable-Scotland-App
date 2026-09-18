@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import { AppColors, ThemeKey, themes } from '@/constants/colors';
+import { mediaUris, persistMedia, removePersistedMediaUri } from '@/utils/media';
 
 export type JourneyStatus = 'saved' | 'active' | 'completed';
 export type MediaType = 'photo' | 'video' | 'voice' | 'note';
@@ -88,13 +89,28 @@ export function AppProvider({ children }: PropsWithChildren) {
     hydrated,
     colors: themes[state.themeKey],
     createJourney: async (draft) => {
-      const journey: Journey = { ...draft, id: id(), createdAt: now(), status: 'saved', startCount: 0 };
+      const steps = await Promise.all(draft.steps.map(async (step) => ({
+        ...step,
+        media: await Promise.all(step.media.map((media) => persistMedia(media))),
+      })));
+      const journey: Journey = {
+        ...draft,
+        imageUri: draft.imageUri ? (await persistMedia({ type: 'photo', uri: draft.imageUri })).uri : draft.imageUri,
+        steps,
+        id: id(),
+        createdAt: now(),
+        status: 'saved',
+        startCount: 0,
+      };
       await commit({ ...state, journeys: [journey, ...state.journeys] });
       AccessibilityInfo.announceForAccessibility('Journey saved');
       return journey;
     },
     deleteJourney: async (journeyId) => {
       const journey = state.journeys.find((item) => item.id === journeyId);
+      if (journey) {
+        await Promise.all([...new Set(mediaUris(journey))].map((uri) => removePersistedMediaUri(uri)));
+      }
       await commit({ ...state, journeys: state.journeys.filter((item) => item.id !== journeyId) });
       if (journey) AccessibilityInfo.announceForAccessibility(`${journey.title} deleted`);
     },
@@ -133,19 +149,28 @@ export function AppProvider({ children }: PropsWithChildren) {
       AccessibilityInfo.announceForAccessibility(nextDone ? `Step complete: ${step.title}` : `Step reopened: ${step.title}`);
     },
     addMedia: async (journeyId, stepId, media) => {
+      const persistedMedia = await persistMedia(media);
+      const journey = state.journeys.find((item) => item.id === journeyId);
+      const step = journey?.steps.find((item) => item.id === stepId);
+      const slot = media.type === 'photo' || media.type === 'video' ? ['photo', 'video'] : [media.type];
+      const replacedUris = step?.media.filter((item) => slot.includes(item.type)).map((item) => item.uri).filter((uri): uri is string => Boolean(uri)) ?? [];
       await commit({
         ...state,
         journeys: state.journeys.map((journey) => journey.id !== journeyId ? journey : {
           ...journey,
           steps: journey.steps.map((step) => {
             if (step.id !== stepId) return step;
-            const slot = media.type === 'photo' || media.type === 'video' ? ['photo', 'video'] : [media.type];
-            return { ...step, media: [...step.media.filter((item) => !slot.includes(item.type)), media] };
+            return { ...step, media: [...step.media.filter((item) => !slot.includes(item.type)), persistedMedia] };
           }),
         }),
       });
+      await Promise.all(replacedUris.map((uri) => removePersistedMediaUri(uri)));
     },
     removeMedia: async (journeyId, stepId, type) => {
+      const journey = state.journeys.find((item) => item.id === journeyId);
+      const removedUris = journey?.steps.find((item) => item.id === stepId)?.media
+        .filter((item) => item.type === type).map((item) => item.uri)
+        .filter((uri): uri is string => Boolean(uri)) ?? [];
       await commit({
         ...state,
         journeys: state.journeys.map((journey) => journey.id !== journeyId ? journey : {
@@ -153,6 +178,7 @@ export function AppProvider({ children }: PropsWithChildren) {
           steps: journey.steps.map((step) => step.id !== stepId ? step : { ...step, media: step.media.filter((item) => item.type !== type) }),
         }),
       });
+      await Promise.all(removedUris.map((uri) => removePersistedMediaUri(uri)));
     },
     completeJourney: async (journeyId) => {
       await commit({
